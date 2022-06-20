@@ -33,6 +33,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import NextLink from "next/link";
 
+import Badge from "../components/Badge";
+
 import { useAuthState } from "react-firebase-hooks/auth";
 import { firebaseApp, db } from "../firebase/firebaseClient";
 import { getAuth, signOut } from "firebase/auth";
@@ -110,7 +112,6 @@ export default function Navbar() {
           >
             <NextLink href="/">Logo</NextLink>
           </Text>
-
           <Flex display={{ base: "none", md: "flex" }} ml={10}>
             <DesktopNav />
           </Flex>
@@ -172,6 +173,23 @@ export default function Navbar() {
             spacing={6}
             align={"center"}
           >
+            <Menu>
+              <MenuButton
+                as={Button}
+                rounded={"full"}
+                variant={"link"}
+                cursor={"pointer"}
+                minW={0}
+              >
+                <Badge count={2} />
+              </MenuButton>
+              <MenuList boxShadow="xl">
+                <MenuItem>You have a new message!</MenuItem>
+                <MenuDivider />
+                <MenuItem>iL0ck0n liked your post</MenuItem>
+              </MenuList>
+            </Menu>
+
             <Menu>
               <MenuButton
                 as={Button}
@@ -403,5 +421,21 @@ const NAV_ITEMS: Array<NavItem> = [
   {
     label: "Protected",
     href: "/protectedpage",
+  },
+  {
+    label: "Bookings",
+    href: "/bookings",
+  },
+  {
+    label: "Create Booking",
+    href: "/datetimepicker",
+  },
+  {
+    label: "All Users",
+    href: "/users",
+  },
+  {
+    label: "Test Chat",
+    href: "/testchat",
   },
 ];

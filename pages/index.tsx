@@ -55,6 +55,8 @@ const Home: NextPage = () => {
         hello
       </div>
     );
+
+  return <div class="bg-gray-200  flex-1">no user</div>;
 };
 
 export default Home;

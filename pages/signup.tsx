@@ -30,10 +30,14 @@ import {
   AddIcon,
 } from "@chakra-ui/icons";
 
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+} from "firebase/auth";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { firebaseApp, db, storage } from "../firebase/firebaseClient";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const auth = getAuth(firebaseApp);
@@ -72,20 +76,28 @@ export default function Signup() {
       let createdUser = userCredentials.user;
 
       // TODO: Upload profile pic
+      let imageUrl;
 
-      const imageRef = ref(storage, file.name);
+      if (file) {
+        const imageRef = ref(storage, file.name);
+        await uploadBytes(imageRef, file);
 
-      await uploadBytes(imageRef, file);
+        console.log("Uploaded a blob or file!");
 
-      console.log("Uploaded a blob or file!");
-
-      // get url
-      let imageUrl = await getDownloadURL(ref(storage, file.name));
+        // get url
+        imageUrl = await getDownloadURL(ref(storage, file.name));
+      }
 
       await setDoc(doc(db, "users", createdUser.uid), {
+        email,
+        firstName,
         profilePictureUrl: imageUrl,
         googleAuthorised: false,
+        createdAt: serverTimestamp(),
       });
+
+      await sendEmailVerification(createdUser);
+      console.log("sent email verification");
 
       toast({
         title: "Account created.",

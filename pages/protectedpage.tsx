@@ -1,18 +1,14 @@
 import { useRouter } from "next/router";
+import { useEffect } from "react";
 
-import { getAuth } from "firebase/auth";
-import { firebaseApp } from "../firebase/firebaseClient";
-import { useAuthState } from "react-firebase-hooks/auth";
-
-const auth = getAuth(firebaseApp);
+import useCustomAuth from "../customHooks/useCustomAuth";
 
 export default function protectedpage() {
   const router = useRouter();
-  const [user, loading, error] = useAuthState(auth);
+  const { user, loading } = useCustomAuth();
 
   if (loading) return <h1>Loading...</h1>;
-  if (!loading && !user) router.push("/login");
-  if (!loading && user) {
+  if (!loading) {
     return <div>protected</div>;
   }
 }

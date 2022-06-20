@@ -20,7 +20,12 @@ import { useRouter } from "next/router";
 import axios from "axios";
 import { Spinner } from "@chakra-ui/react";
 
-import { getAuth } from "firebase/auth";
+import {
+  getAuth,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+} from "firebase/auth";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { firebaseApp, db } from "../firebase/firebaseClient";
 import { doc, setDoc, updateDoc, getDoc, onSnapshot } from "firebase/firestore";
@@ -91,6 +96,32 @@ export default function ProfileSettings() {
     }
   }
 
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+
+  async function updateProfile() {
+    console.log(password);
+    if (password !== "") {
+      try {
+        return console.log(authUser);
+        // console.log({ oldPassword, newPassword });
+        const credential = EmailAuthProvider.credential(
+          authUser.email,
+          oldPassword
+        );
+
+        await reauthenticateWithCredential(authUser, credential);
+        // console.log("done");
+        // return;
+        let res = await updatePassword(authUser, newPassword);
+        console.log(res);
+        console.log("updated password");
+      } catch (error) {
+        console.log(error.message);
+      }
+    }
+  }
+
   if (loading)
     return (
       <div className="flex justify-center mt-4">
@@ -100,117 +131,132 @@ export default function ProfileSettings() {
 
   if (firestoreUser)
     return (
-      <Flex
-        minH={"100vh"}
-        align={"center"}
-        justify={"center"}
-        bg={useColorModeValue("gray.50", "gray.800")}
-      >
-        <Stack
-          spacing={4}
-          w={"full"}
-          maxW={"md"}
-          bg={useColorModeValue("white", "gray.700")}
-          rounded={"xl"}
-          boxShadow={"lg"}
-          p={6}
-          my={12}
+      <div>
+        <Flex
+          minH={"100vh"}
+          align={"center"}
+          justify={"center"}
+          bg={useColorModeValue("gray.50", "gray.800")}
         >
-          <div>Google Section</div>
-          <div className="font-bold">
-            Google Link Complete? :{" "}
-            {firestoreUser.googleAuthorised ? "Yes" : "No"}
-          </div>
-          <div className="">
-            Current Google Email:{" "}
-            {firestoreUser.googleEmailAddress
-              ? firestoreUser.googleEmailAddress
-              : "not available"}
-          </div>
-          <button
-            className="bg-red-500 text-white py-2 px-4 rounded-md"
-            onClick={removeGoogleAccount}
+          <Stack
+            spacing={4}
+            w={"full"}
+            maxW={"md"}
+            bg={useColorModeValue("white", "gray.700")}
+            rounded={"xl"}
+            boxShadow={"lg"}
+            p={6}
+            my={12}
           >
-            Remove Associated Google Account
-          </button>
-          <button
-            className="bg-blue-500 text-white py-2 px-4 rounded-md"
-            onClick={changeGoogleAccount}
-          >
-            Change Google Account
-          </button>
+            <div>Google Section</div>
+            <div className="font-bold">
+              Google Link Complete? :{" "}
+              {firestoreUser.googleAuthorised ? "Yes" : "No"}
+            </div>
+            <div className="">
+              Current Google Email:{" "}
+              {firestoreUser.googleEmailAddress
+                ? firestoreUser.googleEmailAddress
+                : "not available"}
+            </div>
+            <button
+              className="bg-red-500 text-white py-2 px-4 rounded-md"
+              onClick={removeGoogleAccount}
+            >
+              Remove Associated Google Account
+            </button>
+            <button
+              className="bg-blue-500 text-white py-2 px-4 rounded-md"
+              onClick={changeGoogleAccount}
+            >
+              Change Google Account
+            </button>
 
-          <Heading lineHeight={1.1} fontSize={{ base: "2xl", sm: "3xl" }}>
-            User Profile Edit
-          </Heading>
-          <FormControl id="userName">
-            <FormLabel>User Icon</FormLabel>
-            <Stack direction={["column", "row"]} spacing={6}>
-              <Center>
-                <Avatar size="xl" src="https://bit.ly/sage-adebayo">
-                  <AvatarBadge
-                    as={IconButton}
-                    size="sm"
-                    rounded="full"
-                    top="-10px"
-                    colorScheme="red"
-                    aria-label="remove Image"
-                    icon={<SmallCloseIcon />}
-                  />
-                </Avatar>
-              </Center>
-              <Center w="full">
-                <Button w="full">Change Icon</Button>
-              </Center>
+            <Heading lineHeight={1.1} fontSize={{ base: "2xl", sm: "3xl" }}>
+              User Profile Edit
+            </Heading>
+            <FormControl id="userName">
+              <FormLabel>User Icon</FormLabel>
+              <Stack direction={["column", "row"]} spacing={6}>
+                <Center>
+                  <Avatar size="xl" src="https://bit.ly/sage-adebayo">
+                    <AvatarBadge
+                      as={IconButton}
+                      size="sm"
+                      rounded="full"
+                      top="-10px"
+                      colorScheme="red"
+                      aria-label="remove Image"
+                      icon={<SmallCloseIcon />}
+                    />
+                  </Avatar>
+                </Center>
+                <Center w="full">
+                  <Button w="full">Change Icon</Button>
+                </Center>
+              </Stack>
+            </FormControl>
+            <FormControl id="userName" isRequired>
+              <FormLabel>User name</FormLabel>
+              <Input
+                placeholder={authUser.firstName}
+                _placeholder={{ color: "gray.500" }}
+                type="text"
+              />
+            </FormControl>
+            <FormControl id="email" isRequired>
+              <FormLabel>Email address</FormLabel>
+              <Input
+                placeholder={authUser.email}
+                _placeholder={{ color: "gray.500" }}
+                type="email"
+              />
+            </FormControl>
+            <FormControl id="password" isRequired>
+              <FormLabel>Old Password</FormLabel>
+              <Input
+                placeholder="password"
+                _placeholder={{ color: "gray.500" }}
+                type="password"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+              />
+            </FormControl>
+            <FormControl id="password" isRequired>
+              <FormLabel>New Password</FormLabel>
+              <Input
+                placeholder="password"
+                _placeholder={{ color: "gray.500" }}
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </FormControl>
+            <Stack spacing={6} direction={["column", "row"]}>
+              <Button
+                bg={"red.400"}
+                color={"white"}
+                w="full"
+                _hover={{
+                  bg: "red.500",
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                bg={"blue.400"}
+                color={"white"}
+                w="full"
+                _hover={{
+                  bg: "blue.500",
+                }}
+                onClick={updateProfile}
+              >
+                Submit
+              </Button>
             </Stack>
-          </FormControl>
-          <FormControl id="userName" isRequired>
-            <FormLabel>User name</FormLabel>
-            <Input
-              placeholder={authUser.firstName}
-              _placeholder={{ color: "gray.500" }}
-              type="text"
-            />
-          </FormControl>
-          <FormControl id="email" isRequired>
-            <FormLabel>Email address</FormLabel>
-            <Input
-              placeholder={authUser.email}
-              _placeholder={{ color: "gray.500" }}
-              type="email"
-            />
-          </FormControl>
-          <FormControl id="password" isRequired>
-            <FormLabel>Password</FormLabel>
-            <Input
-              placeholder="password"
-              _placeholder={{ color: "gray.500" }}
-              type="password"
-            />
-          </FormControl>
-          <Stack spacing={6} direction={["column", "row"]}>
-            <Button
-              bg={"red.400"}
-              color={"white"}
-              w="full"
-              _hover={{
-                bg: "red.500",
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              bg={"blue.400"}
-              color={"white"}
-              w="full"
-              _hover={{
-                bg: "blue.500",
-              }}
-            >
-              Submit
-            </Button>
           </Stack>
-        </Stack>
-      </Flex>
+        </Flex>
+      </div>
     );
 }
