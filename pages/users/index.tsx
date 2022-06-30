@@ -47,8 +47,17 @@ export default function AllUsers() {
   useEffect(() => {
     if (!authUserLoading && authUser) {
       getFirestoreUser();
+
+      // console.log(authUser);
     }
   }, [authUser, authUserLoading, error]);
+
+  function smallBigString(str1, str2) {
+    if (str1 < str2) {
+      return str1 + str2;
+    }
+    return str2 + str1;
+  }
 
   if (loading)
     return (
@@ -70,7 +79,15 @@ export default function AllUsers() {
               >
                 <Avatar src={user.profilePictureUrl} />
               </div>
-              {user.firstName}
+              <div>{user.firstName}</div>
+              <button
+                className="btn btn-primary"
+                onClick={() =>
+                  router.push(`/chats/${smallBigString(user.id, authUser.uid)}`)
+                }
+              >
+                Message
+              </button>
             </div>
           ))}
         </div>

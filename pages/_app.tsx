@@ -13,6 +13,10 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <Elements stripe={stripePromise}>
       <ChakraProvider>
+        {/* <div
+          data-theme="night"
+          className="max-h-screen min-h-screen flex flex-col"
+        > */}
         <div className="max-h-screen min-h-screen flex flex-col">
           {/* <div > */}
           {/* <div className="sticky top-0 z-50"> */}

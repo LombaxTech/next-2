@@ -10,36 +10,41 @@ const auth = getAuth(firebaseApp);
 
 const useCustomAuth = () => {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
 
   const [authUser, authUserLoading, authUserError] = useAuthState(auth);
   const [user, setUser] = useState(null);
 
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     setLoading(true);
-    init();
-  }, [authUserLoading, authUser]);
 
-  async function init() {
-    if (!authUserLoading && !authUser) {
-      router.push("/login");
-    }
+    async function init() {
+      if (!authUserLoading && !authUser) {
+        // router.push("/login");
+        // console.log("this happned");
+        setUser(null);
+        return setLoading(false);
+      }
 
-    if (!authUserLoading && authUser) {
-      try {
-        onSnapshot(doc(db, "users", authUser.uid), (userDoc) =>
-          setUser({ ...userDoc.data(), ...authUser })
-        );
+      if (!authUserLoading && authUser) {
+        try {
+          onSnapshot(doc(db, "users", authUser.uid), (userDoc) => {
+            setUser({ ...userDoc.data(), ...authUser });
+            setLoading(false);
+          });
 
-        console.log(authUser);
-
-        setLoading(false);
-      } catch (error) {
-        console.log(error);
-        setLoading(false);
+          // console.log(authUser);
+        } catch (error) {
+          console.log(error);
+          setUser(null);
+          setLoading(false);
+        }
       }
     }
-  }
+
+    init();
+  }, [authUserLoading, authUser]);
 
   return {
     user,

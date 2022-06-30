@@ -234,7 +234,9 @@ const DesktopNav = () => {
         <Box key={navItem.label}>
           <Popover trigger={"hover"} placement={"bottom-start"}>
             <PopoverTrigger>
-              <Link
+              {/* A lot bloody faster */}
+              <NextLink href={navItem.href ?? "#"}>{navItem.label}</NextLink>
+              {/* <Link
                 p={2}
                 href={navItem.href ?? "#"}
                 fontSize={"sm"}
@@ -246,7 +248,7 @@ const DesktopNav = () => {
                 }}
               >
                 {navItem.label}
-              </Link>
+              </Link> */}
             </PopoverTrigger>
 
             {navItem.children && (
@@ -437,5 +439,21 @@ const NAV_ITEMS: Array<NavItem> = [
   {
     label: "Test Chat",
     href: "/testchat",
+  },
+  {
+    label: "Future Payments",
+    href: "/futurepayments",
+  },
+  {
+    label: "Cards",
+    href: "/paymentmethods",
+  },
+  {
+    label: "Booking Requests",
+    href: "/bookingrequests",
+  },
+  {
+    label: "Tutor Dashboard",
+    href: "/tutordashboard",
   },
 ];
