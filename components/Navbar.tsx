@@ -41,28 +41,12 @@ import { getAuth, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 const auth = getAuth(firebaseApp);
 
+import useCustomAuth from "../customHooks/useCustomAuth";
+
 export default function Navbar() {
   const router = useRouter();
 
-  const [authUser, loading, error] = useAuthState(auth);
-  const [userDetails, setUserDetails] = useState(null);
-
-  async function getUser() {
-    try {
-      let userDocRef = doc(db, "users", authUser.uid);
-      let userDoc = await getDoc(userDocRef);
-      console.log(userDoc.data());
-      setUserDetails(userDoc.data());
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  useEffect(() => {
-    if (authUser) {
-      getUser();
-    }
-  }, [authUser]);
+  const { user, loading } = useCustomAuth();
 
   const logout = async () => {
     try {
@@ -117,7 +101,7 @@ export default function Navbar() {
           </Flex>
         </Flex>
 
-        {!authUser && (
+        {!user && (
           <Stack
             flex={{ base: 1, md: 0 }}
             justify={"flex-end"}
@@ -165,7 +149,7 @@ export default function Navbar() {
             Logout
           </Button>
         )} */}
-        {authUser && userDetails && (
+        {user && (
           <Stack
             flex={{ base: 1, md: 0 }}
             justify={"flex-end"}
@@ -200,7 +184,7 @@ export default function Navbar() {
               >
                 <Avatar
                   className="cursor-pointer"
-                  src={userDetails.profilePictureUrl}
+                  src={user.profilePictureUrl}
                   size={"sm"}
                 />
               </MenuButton>
@@ -423,10 +407,6 @@ const NAV_ITEMS: Array<NavItem> = [
   {
     label: "Protected",
     href: "/protectedpage",
-  },
-  {
-    label: "Bookings",
-    href: "/bookings",
   },
   {
     label: "Create Booking",
