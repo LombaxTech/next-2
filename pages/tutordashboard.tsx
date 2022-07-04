@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import useCustomAuth from "../customHooks/useCustomAuth";
 
 import { useRouter } from "next/router";
+import axios from "axios";
+
+import { Tooltip } from "@chakra-ui/react";
 
 export default function TutorDashboard() {
   const router = useRouter();
@@ -32,6 +35,27 @@ export default function TutorDashboard() {
   const onboardAccount = async () => {
     try {
       // TODO get onboarding link from backend and redirect user
+      // ...
+      let linkRes = await axios.post(
+        `http://localhost:5000/onboarding/${user.stripeConnectedAccount.id}`
+      );
+      linkRes = linkRes.data;
+      const { url } = linkRes;
+      router.push(url);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const goToStripeDashboard = async () => {
+    try {
+      let loginLinkRes = await axios.post(
+        `http://localhost:5000/loginlink/${user.stripeConnectedAccount.id}`
+      );
+      loginLinkRes = loginLinkRes.data;
+      const { url } = loginLinkRes;
+      // router.push(url);
+      window.open(url, "_blank").focus();
     } catch (error) {
       console.log(error);
     }
@@ -55,6 +79,19 @@ export default function TutorDashboard() {
               </button>
             </div>
           )}
+        </div>
+        <div>
+          <button
+            className="btn btn-secondary my-4"
+            onClick={goToStripeDashboard}
+          >
+            View Your Stripe Dashboard
+          </button>
+          <Tooltip label="Stripe is a world famouse payment management tool. Using the dashboard you can view your invoices.">
+            <div className="font-light text-gray-600 text-center cursor-pointer">
+              What is my Stripe Dashboard?
+            </div>
+          </Tooltip>
         </div>
       </div>
     );

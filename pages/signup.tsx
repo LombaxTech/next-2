@@ -4,6 +4,8 @@ import Upload from "rc-upload";
 import axios from "axios";
 
 import {
+  RadioGroup,
+  Radio,
   Flex,
   Box,
   FormControl,
@@ -42,6 +44,7 @@ import { firebaseApp, db, storage } from "../firebase/firebaseClient";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import handler from "./api/hello";
+import { calcRelativeAxisPosition } from "framer-motion/types/projection/geometry/delta-calc";
 
 const auth = getAuth(firebaseApp);
 
@@ -64,17 +67,24 @@ export default function Signup() {
   const [file, setFile] = useState(null);
 
   const [studentChecked, setStudentChecked] = useState(false);
+  const [tutorChecked, setTutorChecked] = useState(false);
 
   const handleCheckBoxClick = (e, accountType) => {
     console.log(e.target.checked);
     console.log(accountType);
-    setStudentChecked(e.target.checked);
+    if (accountType === "student") {
+      setStudentChecked(e.target.checked);
+    } else if (accountType === "tutor") {
+      setTutorChecked(e.target.checked);
+    }
   };
 
   const signup = async () => {
     try {
       setSignupLoading(true);
       console.log({ email, password, firstName, lastName });
+
+      // return console.log({ studentChecked, tutorChecked });
 
       // TODO: Create auth user
 
@@ -115,6 +125,26 @@ export default function Signup() {
       stripeCustomer = stripeCustomer?.data;
       console.log(stripeCustomer);
 
+      // TODO: If tutor -> create stripe connected account
+      let connectedAccountId;
+
+      if (tutorChecked) {
+        let accountRes = await axios.post(
+          `http://localhost:5000/connected-account`
+        );
+        accountRes = accountRes.data;
+        connectedAccountId = accountRes.id;
+      }
+
+      const tutorOnlyProperties = {
+        active: false,
+        stripeConnectedAccount: {
+          id: connectedAccountId,
+          setupComplete: false,
+          remaining_requirements: [],
+        },
+      };
+
       await setDoc(doc(db, "users", createdUser.uid), {
         email,
         firstName,
@@ -123,6 +153,7 @@ export default function Signup() {
         createdAt: serverTimestamp(),
         type: studentChecked ? "student" : "tutor",
         ...(studentChecked && { stripeCustomerId: stripeCustomer.id }),
+        ...(tutorChecked && tutorOnlyProperties),
       });
 
       // await sendEmailVerification(createdUser);
@@ -265,6 +296,8 @@ export default function Signup() {
                   <Checkbox onChange={(e) => handleCheckBoxClick(e, "admin")}>
                     Admin
                   </Checkbox>
+                  <div></div>
+
                   <Button
                     loadingText="Submitting"
                     size="lg"
@@ -278,6 +311,7 @@ export default function Signup() {
                     Sign up
                   </Button>
                 </Stack>
+
                 <Stack pt={6}>
                   <Text align={"center"}>
                     Already a user? <Link color={"blue.400"}>Login</Link>

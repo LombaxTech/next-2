@@ -39,6 +39,13 @@ export default function BookingRequests() {
     try {
       console.log(booking);
 
+      if (user.type !== "tutor") {
+        return console.log("bug off, only tutors");
+      } else {
+        console.log(user.stripeConnectedAccount.id);
+        // return;
+      }
+
       // TODO Receive payment intent from backed
 
       let paymentIntent = await axios.post(
@@ -46,6 +53,7 @@ export default function BookingRequests() {
         {
           paymentMethod: booking.paymentMethod,
           stripeCustomerId: booking.student.stripeCustomerId,
+          connectedAccountId: user.stripeConnectedAccount.id,
         }
       );
 
