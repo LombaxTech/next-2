@@ -158,8 +158,8 @@ export default function Chat() {
           <ul className="space-y-2">
             {messages &&
               messages.map((msg) => {
-                // if (msg.sender === user.firstName) {
-                if (Math.round(Math.random()) === 0) {
+                if (msg.sender === user.firstName) {
+                  // if (Math.round(Math.random()) === 0) {
                   return <MyMessage msg={msg} />;
                 } else {
                   return <YourMessage text={msg.text} />;

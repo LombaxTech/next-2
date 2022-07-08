@@ -20,6 +20,7 @@ import {
   query,
   where,
   onSnapshot,
+  serverTimestamp,
 } from "firebase/firestore";
 
 import useCustomAuth from "../customHooks/useCustomAuth";
@@ -143,6 +144,24 @@ const Home: NextPage = () => {
     }
   };
 
+  const createNotification = async () => {
+    try {
+      console.log("create notification");
+
+      let notification = {
+        userId: user.uid,
+        message: "Test notification",
+        createdAt: serverTimestamp(),
+        read: false,
+      };
+
+      await addDoc(collection(db, "notifications"), notification);
+      console.log("added notification");
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   if (loading) return <h1>Loading...</h1>;
 
   if (user)
@@ -160,9 +179,12 @@ const Home: NextPage = () => {
           </div>
         )}
         {user.googleAuthorised && <CreateCalendarEvent />}
-        <div className="flex justify-center">
+        <div className="flex flex-col justify-center items-center gap-6">
           <button onClick={doSomething} className="btn btn-outline">
             Do Whatever
+          </button>
+          <button onClick={createNotification} className="btn btn-primary">
+            Create Notification
           </button>
         </div>
         <div className="flex justify-center items-center flex-col">

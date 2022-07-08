@@ -1,4 +1,5 @@
 import {
+  Alert,
   Box,
   Flex,
   Text,
@@ -20,6 +21,8 @@ import {
   MenuList,
   MenuItem,
   MenuDivider,
+  Radio,
+  RadioGroup,
 } from "@chakra-ui/react";
 import {
   HamburgerIcon,
@@ -35,18 +38,71 @@ import NextLink from "next/link";
 
 import Badge from "../components/Badge";
 
-import { useAuthState } from "react-firebase-hooks/auth";
 import { firebaseApp, db } from "../firebase/firebaseClient";
 import { getAuth, signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 const auth = getAuth(firebaseApp);
 
 import useCustomAuth from "../customHooks/useCustomAuth";
+
+import {
+  collection,
+  onSnapshot,
+  query,
+  where,
+  updateDoc,
+  doc,
+} from "firebase/firestore";
 
 export default function Navbar() {
   const router = useRouter();
 
   const { user, loading } = useCustomAuth();
+
+  const [notifications, setNotificiations] = useState([]);
+  const [unreadNotifications, setUnreadNotifications] = useState([]);
+
+  useEffect(() => {
+    async function init() {
+      try {
+        if (!loading && user) {
+          // get all notificatios for user
+
+          const q = query(
+            collection(db, "notifications"),
+            where("userId", "==", user.uid)
+          );
+
+          onSnapshot(q, (notificationsSnapshot) => {
+            let notifications = [];
+            let unreadNotifications = [];
+
+            notificationsSnapshot.forEach((notification) => {
+              // console.log(notification.data());
+              notifications.push({
+                id: notification.id,
+                ...notification.data(),
+              });
+
+              if (notification.data().read)
+                unreadNotifications.push({
+                  id: notification.id,
+                  ...notification.data(),
+                });
+            });
+
+            setNotificiations(notifications);
+            setUnreadNotifications(unreadNotifications);
+            console.log("unread notifications");
+            console.log(unreadNotifications);
+          });
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    init();
+  }, [user, loading]);
 
   const logout = async () => {
     try {
@@ -57,10 +113,30 @@ export default function Navbar() {
     }
   };
 
+  const readNotification = async (notification) => {
+    try {
+      console.log(notification);
+      const docRef = doc(db, "notifications", notification.id);
+      await updateDoc(docRef, {
+        read: true,
+      });
+      console.log("success");
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const { isOpen, onToggle } = useDisclosure();
+
+  const [notificationValue, setNotificationValue] = useState("all");
 
   return (
     <Box>
+      <div className="fixed bottom-0 right-0 m-10 mr-[-8]">
+        <div className="flex flex-col gap-4">
+          <Alert>hello</Alert>
+        </div>
+      </div>
       <Flex
         bg={useColorModeValue("white", "gray.800")}
         color={useColorModeValue("gray.600", "white")}
@@ -165,12 +241,63 @@ export default function Navbar() {
                 cursor={"pointer"}
                 minW={0}
               >
-                <Badge count={2} />
+                <Badge count={notifications.length} />
               </MenuButton>
-              <MenuList boxShadow="xl">
-                <MenuItem>You have a new message!</MenuItem>
-                <MenuDivider />
-                <MenuItem>iL0ck0n liked your post</MenuItem>
+              <MenuList boxShadow="xl" className="bg-red-200">
+                <div className="max-h-96 overflow-y-auto w-80 scrollbar-thin scrollbar-thumb-slate-200">
+                  <div className="flex justify-center p-4">
+                    <RadioGroup
+                      defaultValue="all"
+                      onChange={setNotificationValue}
+                      value={notificationValue}
+                    >
+                      <Stack spacing={5} direction="row">
+                        <Radio colorScheme="red" value="all">
+                          All
+                        </Radio>
+                        <Radio colorScheme="green" value="unread">
+                          Unread
+                        </Radio>
+                      </Stack>
+                    </RadioGroup>
+                  </div>
+                  {notificationValue === "unread" &&
+                    unreadNotifications.map((notification) => (
+                      <>
+                        <MenuDivider />
+                        <MenuItem>
+                          <div
+                            className="flex justify-between items-center w-full mx-4 cursor-pointer"
+                            onClick={() => readNotification(notification)}
+                          >
+                            <div className="">{notification.message}</div>
+                            {!notification.read && (
+                              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                            )}
+                          </div>
+                        </MenuItem>
+                        <MenuDivider />
+                      </>
+                    ))}
+                  {notificationValue === "all" &&
+                    notifications.map((notification) => (
+                      <>
+                        <MenuDivider />
+                        <MenuItem>
+                          <div
+                            className="flex justify-between items-center w-full mx-4 cursor-pointer"
+                            onClick={() => readNotification(notification)}
+                          >
+                            <div className="">{notification.message}</div>
+                            {!notification.read && (
+                              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                            )}
+                          </div>
+                        </MenuItem>
+                        <MenuDivider />
+                      </>
+                    ))}
+                </div>
               </MenuList>
             </Menu>
 
